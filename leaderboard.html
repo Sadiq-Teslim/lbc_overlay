@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>LBC • Leaderboard Overlay</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+
+    <style>
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+        }
+        
+        body {
+            background: transparent;
+            /* Essential for OBS Browser Source */
+            font-family: "Poppins", system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+            overflow: hidden;
+        }
+        
+         :root {
+            --gold-1: #fff2b3;
+            --gold-2: #f7d17c;
+            --gold-3: #e0a84f;
+            --gold-4: #b5792f;
+            --gold-5: #8b5a1f;
+            --gold-grad: linear-gradient(135deg, var(--gold-1) 0%, var(--gold-2) 20%, var(--gold-3) 45%, var(--gold-1) 65%, var(--gold-4) 100%);
+            --glow: 0 0 18px rgba(247, 209, 124, .45), 0 0 44px rgba(181, 121, 47, .25);
+            --panel-bg: rgba(10, 10, 10, .40);
+            --row-bg: rgba(10, 10, 10, .55);
+            --text: #f8f5ee;
+            --accent: #d4af37;
+        }
+        /* --- Layout & Composition --- */
+        
+        .stage {
+            position: absolute;
+            inset: 0;
+            display: grid;
+            place-items: center;
+            padding: 40px;
+        }
+        
+        .frame {
+            position: relative;
+            width: 480px;
+            background: var(--panel-bg);
+            border-radius: 24px;
+            padding: 24px 28px 20px;
+            border: 3px solid transparent;
+            -webkit-backdrop-filter: blur(6px);
+            backdrop-filter: blur(6px);
+            box-shadow: var(--glow);
+            border-image: var(--gold-grad) 1;
+            overflow: hidden;
+        }
+        
+        .frame::before {
+            content: "";
+            position: absolute;
+            inset: -2px;
+            background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, .25) 45%, transparent 60%);
+            transform: translateX(-100%);
+            animation: sweep 6s linear infinite;
+            pointer-events: none;
+        }
+        
+        @keyframes sweep {
+            to {
+                transform: translateX(100%);
+            }
+        }
+        /* --- Header Title Block --- */
+        
+        .title {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            letter-spacing: .06em;
+            font-weight: 800;
+            font-size: 24px;
+            /* Adjusted for new width */
+            color: var(--text);
+            margin: 4px 6px 16px;
+            text-transform: uppercase;
+        }
+        
+        .title .rule {
+            flex: 1;
+            height: 2px;
+            background: var(--gold-grad);
+            box-shadow: var(--glow);
+            border-radius: 2px;
+        }
+        
+        .title .badge {
+            display: inline-grid;
+            place-items: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            /* Adjusted for new font size */
+            background: var(--gold-grad);
+            color: #2a1b07;
+            font-weight: 900;
+            border: 1px solid rgba(0, 0, 0, .25);
+            box-shadow: var(--glow);
+        }
+        /* --- Row Styling --- */
+        
+        .rows {
+            display: grid;
+            gap: 10px;
+        }
+        
+        .row {
+            display: grid;
+            grid-template-columns: 64px 1fr auto;
+            align-items: center;
+            background: var(--row-bg);
+            border: 2px solid transparent;
+            border-image: var(--gold-grad) 1;
+            border-radius: 16px;
+            padding: 10px 14px;
+            color: var(--text);
+        }
+        
+        .rank {
+            font-weight: 800;
+            font-size: 20px;
+            color: var(--accent);
+            text-shadow: 0 0 8px rgba(212, 175, 55, .45);
+        }
+        
+        .name {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+            font-size: 20px;
+            font-weight: 600;
+            letter-spacing: .02em;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .name .crown {
+            width: 22px;
+            height: 22px;
+            display: inline-block;
+            filter: drop-shadow(0 0 6px rgba(247, 209, 124, .55));
+            background: radial-gradient(circle at 50% 85%, var(--gold-1), transparent 60%), conic-gradient(from 200deg, var(--gold-4), var(--gold-2), var(--gold-3), var(--gold-4));
+            -webkit-mask: radial-gradient(circle at 20% 40%, #000 16px, transparent 17px), radial-gradient(circle at 50% 25%, #000 16px, transparent 17px), radial-gradient(circle at 80% 40%, #000 16px, transparent 17px), linear-gradient(#000 0 0);
+            -webkit-mask-composite: destination-out, destination-out, destination-out, source-over;
+            mask-composite: exclude;
+            border-radius: 0 0 6px 6px;
+        }
+        
+        .amount {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--gold-1);
+            text-shadow: 0 0 10px rgba(247, 209, 124, .55);
+            padding-left: 14px;
+        }
+        
+        .note {
+            text-align: right;
+            font-size: 11px;
+            color: #e6d7b099;
+            padding-top: 8px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="stage">
+        <section class="frame" id="panel">
+            <div class="title">
+                <span class="badge">🏆</span>
+                <span>Top Supporters</span>
+                <span class="rule"></span>
+            </div>
+
+            <div class="rows" id="rows">
+                <!-- Rows are injected by JS -->
+            </div>
+
+            <div class="note">Status: <span id="statusLabel">Initializing...</span></div>
+        </section>
+    </div>
+
+    <script>
+        const params = new URLSearchParams(location.search);
+        const ROOM = params.get('room') || 'demo';
+        const HUB = params.get('hub') || 'wss://wss.overlays.latinabeautycollection.com/ws';
+
+        const statusEl = document.getElementById('statusLabel');
+        const rowsEl = document.getElementById('rows');
+
+        function fmtAmount(n) {
+            try {
+                return new Intl.NumberFormat('en-US', {
+                    maximumFractionDigits: 0
+                }).format(Number(n || 0));
+            } catch {
+                return n;
+            }
+        }
+
+        function render(items = []) {
+            items = (items || []).slice().sort((a, b) => (b.amount || 0) - (a.amount || 0)).slice(0, 10);
+            rowsEl.innerHTML = items.map((it, idx) =>
+                `<div class="row">
+        <div class="rank">${idx+1}</div>
+        <div class="name">
+          ${idx===0 ? '<span class="crown"></span>' : ''}
+          <span>${(it.name || '—').toString().slice(0,28)}</span>
+        </div>
+        <div class="amount">$${fmtAmount(it.amount)}</div>
+      </div>`
+            ).join('');
+        }
+
+        // Initial demo content for instant display, replaced by live data.
+        render([{
+            name: 'ElReyAzul',
+            amount: 1250
+        }, {
+            name: 'SirGold',
+            amount: 740
+        }, {
+            name: 'AnónimoVIP',
+            amount: 520
+        }, {
+            name: 'Madrugador',
+            amount: 340
+        }, {
+            name: 'LaFuerza',
+            amount: 210
+        }]);
+
+        let ws;
+
+        function connect() {
+            statusEl.textContent = 'Connecting...';
+            ws = new WebSocket(`${HUB}?room=${encodeURIComponent(ROOM)}&widget=leaderboard`);
+            ws.onopen = () => {
+                console.log('[ws] connected');
+                statusEl.textContent = 'Live';
+            };
+            ws.onclose = (e) => {
+                console.log('[ws] closed', e.code);
+                statusEl.textContent = 'Reconnecting...';
+                setTimeout(connect, 1500);
+            };
+            ws.onerror = (e) => {
+                console.warn('[ws] error', e);
+                statusEl.textContent = 'Error';
+            };
+            ws.onmessage = (ev) => {
+                try {
+                    const msg = JSON.parse(ev.data);
+                    if (msg && msg.type === 'lb.update' && Array.isArray(msg.items)) {
+                        render(msg.items);
+                    }
+                } catch (e) { /* ignore */ }
+            };
+        }
+        connect();
+    </script>
+</body>
+
+</html>

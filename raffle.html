@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>LBC • Lucky Draw Overlay</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+
+    <style>
+         :root {
+            --gold-1: #fff2b3;
+            --gold-2: #f7d17c;
+            --gold-3: #e0a84f;
+            --gold-4: #b5792f;
+            --gold-5: #8b5a1f;
+            --gold-grad: linear-gradient(135deg, var(--gold-1) 0%, var(--gold-2) 20%, var(--gold-3) 45%, var(--gold-1) 65%, var(--gold-4) 100%);
+            --panel-bg: rgba(18, 18, 18, .85);
+            /* Slightly more opaque for clarity */
+            --text: #f8f5ee;
+            --accent: #d4af37;
+        }
+        
+        body {
+            font-family: "Poppins", system-ui, sans-serif;
+            background: transparent;
+            margin: 0;
+            padding: 20px;
+            display: grid;
+            place-items: center;
+            height: 100vh;
+            box-sizing: border-box;
+        }
+        /* --- Main Raffle Widget Container --- */
+        
+        .raffle-container {
+            width: 700px;
+            background: var(--panel-bg);
+            border-radius: 24px;
+            padding: 24px 28px;
+            border: 3px solid transparent;
+            -webkit-backdrop-filter: blur(8px);
+            backdrop-filter: blur(8px);
+            border-image: var(--gold-grad) 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        /* --- Header --- */
+        
+        .raffle-header {
+            text-align: center;
+            font-size: 24px;
+            font-weight: 800;
+            letter-spacing: .08em;
+            color: var(--text);
+            text-transform: uppercase;
+            padding-bottom: 10px;
+            border-bottom: 2px solid;
+            border-image: var(--gold-grad) 1;
+        }
+        /* --- Main Content Grid --- */
+        
+        .raffle-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: auto auto;
+            gap: 20px;
+        }
+        /* --- Generic Panel Styling --- */
+        
+        .raffle-panel {
+            background: rgba(10, 10, 10, .55);
+            border: 2px solid transparent;
+            border-image: var(--gold-grad) 1;
+            border-radius: 16px;
+            padding: 16px;
+        }
+        
+        .panel-title {
+            font-weight: 600;
+            font-size: 16px;
+            color: var(--accent);
+            margin-bottom: 12px;
+            text-transform: uppercase;
+        }
+        /* --- Specific Panel Layouts --- */
+        
+        .entries-panel {
+            grid-column: 1 / 2;
+            grid-row: 1 / 3;
+        }
+        
+        .winner-panel {
+            grid-column: 2 / 3;
+            grid-row: 1 / 2;
+        }
+        
+        .recent-entries-panel {
+            grid-column: 2 / 3;
+            grid-row: 2 / 3;
+        }
+        /* --- Entries Panel Styling --- */
+        
+        #entries-count {
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--gold-1);
+        }
+        
+        .progress-bar-container {
+            width: 100%;
+            height: 20px;
+            background-color: #000;
+            border: 1px solid #444;
+            border-radius: 10px;
+            padding: 2px;
+            margin: 8px 0 16px;
+            box-sizing: border-box;
+        }
+        
+        .progress-bar-fill {
+            height: 100%;
+            border-radius: 8px;
+            background: var(--gold-grad);
+            transition: width 0.5s ease-out;
+        }
+        
+        .rules-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            font-size: 14px;
+            color: #ccc;
+        }
+        
+        .rules-list li {
+            margin-bottom: 6px;
+        }
+        /* --- Winner Spotlight Panel --- */
+        
+        .winner-details {
+            font-size: 14px;
+            color: #eee;
+        }
+        
+        .winner-details span {
+            font-weight: 600;
+            color: var(--gold-2);
+        }
+        
+        .prize-tiers {
+            list-style: none;
+            padding: 0;
+            margin: 12px 0 0;
+            font-size: 14px;
+        }
+        /* --- Recent Entries Panel --- */
+        
+        .recent-entries-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            font-size: 14px;
+        }
+        
+        .recent-entries-list li {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+        }
+        
+        .entry-name {
+            color: #eee;
+        }
+        
+        .entry-tickets {
+            color: var(--gold-2);
+            font-weight: 600;
+        }
+        /* --- Footer Countdown & Button --- */
+        
+        .raffle-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(10, 10, 10, .55);
+            border: 2px solid transparent;
+            border-image: var(--gold-grad) 1;
+            border-radius: 16px;
+            padding: 10px 20px;
+        }
+        
+        .next-draw-label {
+            font-size: 14px;
+            color: #ccc;
+        }
+        
+        #draw-countdown {
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--text);
+        }
+        
+        .draw-now-button {
+            background: var(--gold-grad);
+            color: #2a1b07;
+            font-weight: 800;
+            font-size: 18px;
+            padding: 12px 24px;
+            border-radius: 10px;
+            border: 1px solid rgba(0, 0, 0, .25);
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="raffle-container">
+        <div class="raffle-header">Raffle • Lucky Draw</div>
+
+        <div class="raffle-content">
+            <div class="raffle-panel entries-panel">
+                <div class="panel-title">Entries</div>
+                <div id="entries-count">0 tickets</div>
+                <div class="progress-bar-container">
+                    <div id="entries-progress" class="progress-bar-fill" style="width: 0%;"></div>
+                </div>
+                <ul id="rules-list" class="rules-list">
+                    <!-- Rules loaded by JS -->
+                </ul>
+            </div>
+
+            <div class="raffle-panel winner-panel">
+                <div class="panel-title">Winner Spotlight</div>
+                <div id="winner-details" class="winner-details">
+                    No winner yet.
+                </div>
+                <div class="panel-title" style="margin-top: 20px;">Prize Tiers</div>
+                <ul id="prize-tiers" class="prize-tiers">
+                    <!-- Prizes loaded by JS -->
+                </ul>
+            </div>
+
+            <div class="raffle-panel recent-entries-panel">
+                <div class="panel-title">Recent Entries</div>
+                <ul id="recent-entries-list" class="recent-entries-list">
+                    <!-- Entries loaded by JS -->
+                </ul>
+            </div>
+        </div>
+
+        <div class="raffle-footer">
+            <div>
+                <div class="next-draw-label">Next Draw In</div>
+                <div id="draw-countdown">--:--</div>
+            </div>
+            <div class="draw-now-button">DRAW NOW</div>
+        </div>
+    </div>
+
+    <script>
+        // --- DOM Element Selection ---
+        const elements = {
+            entriesCount: document.getElementById('entries-count'),
+            entriesProgress: document.getElementById('entries-progress'),
+            rulesList: document.getElementById('rules-list'),
+            winnerDetails: document.getElementById('winner-details'),
+            prizeTiers: document.getElementById('prize-tiers'),
+            recentEntriesList: document.getElementById('recent-entries-list'),
+            drawCountdown: document.getElementById('draw-countdown')
+        };
+
+        let countdownInterval;
+
+        // --- Renderer Function ---
+        function render(data) {
+            if (!data) return;
+
+            // Entries Panel
+            const maxEntries = data.maxEntries || 1;
+            const currentEntries = data.currentEntries || 0;
+            const percentage = Math.min((currentEntries / maxEntries) * 100, 100);
+            elements.entriesCount.textContent = `${currentEntries} tickets`;
+            elements.entriesProgress.style.width = `${percentage}%`;
+            elements.rulesList.innerHTML = (data.rules || []).map(rule => `<li>• ${rule}</li>`).join('');
+
+            // Winner Panel
+            if (data.winner && data.winner.alias) {
+                elements.winnerDetails.innerHTML = `
+                Alias: <span>${data.winner.alias}</span><br>
+                Tickets: <span>${data.winner.tickets}</span><br>
+                Prize: <span>${data.winner.prize}</span>
+            `;
+            } else {
+                elements.winnerDetails.textContent = 'No winner yet.';
+            }
+            elements.prizeTiers.innerHTML = (data.prizes || []).map(prize => `<li>• ${prize}</li>`).join('');
+
+            // Recent Entries Panel
+            elements.recentEntriesList.innerHTML = (data.recentEntries || []).slice(0, 5).map(entry => `
+            <li>
+                <span class="entry-name">${entry.name}</span>
+                <span class="entry-tickets">+${entry.tickets}</span>
+            </li>
+        `).join('');
+
+            // Countdown Timer
+            if (data.drawTimestamp) {
+                clearInterval(countdownInterval);
+                countdownInterval = setInterval(() => {
+                    const remaining = Math.max(0, data.drawTimestamp - Date.now());
+                    const minutes = Math.floor((remaining / 1000 / 60) % 60).toString().padStart(2, '0');
+                    const seconds = Math.floor((remaining / 1000) % 60).toString().padStart(2, '0');
+                    elements.drawCountdown.textContent = `${minutes}:${seconds}`;
+                    if (remaining === 0) clearInterval(countdownInterval);
+                }, 1000);
+            }
+        }
+
+        // --- Initial Demo/Test Data ---
+        const demoData = {
+            currentEntries: 1245,
+            maxEntries: 2000,
+            rules: ["1 tip = 1 ticket", "$20+ tip = +3 bonus tickets", "Poll vote = +1 ticket", "Cycle length: 7 minutes"],
+            winner: {
+                alias: "KINGCARLOS",
+                tickets: 128,
+                prize: "VIP Day Pass"
+            },
+            prizes: ["1st: VIP Day Pass", "2nd: Priority Shoutout + Badge", "3rd: Chat Highlight Boost"],
+            recentEntries: [{
+                name: "Ana",
+                tickets: 5
+            }, {
+                name: "Luis",
+                tickets: 1
+            }, {
+                name: "Marco",
+                tickets: 3
+            }, {
+                name: "Valeria",
+                tickets: 2
+            }, {
+                name: "Nina",
+                tickets: 1
+            }, {
+                name: "Diego",
+                tickets: 10
+            }, {
+                name: "Sofia",
+                tickets: 1
+            }, {
+                name: "Leo",
+                tickets: 2
+            }],
+            drawTimestamp: Date.now() + (2 * 60 + 43) * 1000 // 2 minutes 43 seconds from now
+        };
+        render(demoData);
+
+        // --- WebSocket Connection ---
+        // This section is ready for a real connection. For now, it will just show errors.
+        const HUB = 'wss://wss.overlays.latinabeautycollection.com/ws';
+
+        function connect() {
+            const ws = new WebSocket(`${HUB}?widget=raffle`);
+            ws.onopen = () => console.log('[ws] raffle connected');
+            ws.onclose = () => setTimeout(connect, 2000);
+            ws.onmessage = (ev) => {
+                try {
+                    const msg = JSON.parse(ev.data);
+                    if (msg && msg.type === 'raffle.update') {
+                        render(msg.data);
+                    }
+                } catch (e) {}
+            };
+        }
+        connect();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>LBC • VIP Panel Overlay</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+
+    <style>
+         :root {
+            --gold-1: #fff2b3;
+            --gold-2: #f7d17c;
+            --gold-3: #e0a84f;
+            --gold-4: #b5792f;
+            --gold-grad: linear-gradient(135deg, var(--gold-1) 0%, var(--gold-2) 20%, var(--gold-3) 45%, var(--gold-1) 65%, var(--gold-4) 100%);
+            --panel-bg: rgba(18, 18, 18, .85);
+            --text: #f8f5ee;
+            --accent: #d4af37;
+        }
+        
+        body {
+            font-family: "Poppins", system-ui, sans-serif;
+            background: transparent;
+            margin: 0;
+            padding: 20px;
+            display: grid;
+            place-items: center;
+            height: 100vh;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+        /* --- Main Framed Panel --- */
+        
+        .frame {
+            position: relative;
+            width: 380px;
+            background: var(--panel-bg);
+            border-radius: 24px;
+            padding: 24px;
+            border: 3px solid transparent;
+            -webkit-backdrop-filter: blur(8px);
+            backdrop-filter: blur(8px);
+            border-image: var(--gold-grad) 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+        /* --- Header --- */
+        
+        .header {
+            text-align: center;
+            font-size: 22px;
+            font-weight: 800;
+            letter-spacing: .08em;
+            color: var(--text);
+            text-transform: uppercase;
+        }
+        /* --- Spotlight Content --- */
+        
+        .spotlight {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            width: 100%;
+            background: rgba(10, 10, 10, .55);
+            border: 2px solid transparent;
+            border-image: var(--gold-grad) 1;
+            border-radius: 16px;
+            padding: 16px;
+            box-sizing: border-box;
+        }
+        
+        .avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(145deg, #444, #222);
+            display: grid;
+            place-items: center;
+            font-size: 3rem;
+            color: var(--gold-1);
+            flex-shrink: 0;
+        }
+        
+        .details {
+            font-size: 14px;
+            color: #eee;
+        }
+        
+        .details .alias {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--gold-1);
+            margin: 0 0 4px;
+        }
+        
+        .details .stats {
+            font-size: 0.9rem;
+            color: var(--accent);
+        }
+        
+        .details .stats span {
+            font-weight: 600;
+            color: var(--gold-2);
+        }
+        /* --- QR Code --- */
+        
+        .qr-container {
+            width: 200px;
+            height: 200px;
+            background-color: #fff;
+            padding: 10px;
+            border-radius: 8px;
+        }
+        
+        .qr-container img {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+        /* --- Perk Label --- */
+        
+        .perk-label {
+            font-size: 14px;
+            color: #ccc;
+            font-weight: 600;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="frame">
+        <div class="header">Top Supporter</div>
+
+        <div class="spotlight">
+            <div class="avatar">🔺</div>
+            <div class="details">
+                <h2 id="vip-alias" class="alias">...</h2>
+                <div id="vip-stats" class="stats">...</div>
+            </div>
+        </div>
+
+        <div class="qr-container">
+            <img id="vip-qrcode" src="" alt="VIP QR Code">
+        </div>
+
+        <div id="vip-perk" class="perk-label">...</div>
+    </div>
+
+    <script>
+        // --- DOM Element Selection ---
+        const elements = {
+            alias: document.getElementById('vip-alias'),
+            stats: document.getElementById('vip-stats'),
+            qrcode: document.getElementById('vip-qrcode'),
+            perk: document.getElementById('vip-perk')
+        };
+
+        // --- Renderer Function ---
+        function render(data) {
+            if (!data) return;
+
+            const currency = (val) => new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                minimumFractionDigits: 0
+            }).format(val);
+
+            elements.alias.textContent = data.alias || '...';
+            elements.stats.innerHTML = `Lifetime: <span>${currency(data.lifetime || 0)}</span> • Tier: <span>${data.tier || 'N/A'}</span>`;
+            elements.qrcode.src = data.qrCodeUrl || '';
+            elements.perk.textContent = `Perk: ${data.perk || '...'}`;
+        }
+
+        // --- Initial Demo/Test Data ---
+        const userAlias = "KINGCARLOS";
+        const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://latinabeautycollection.com/vip/${userAlias}`;
+        render({
+            alias: userAlias,
+            lifetime: 8420,
+            tier: 'Crown',
+            qrCodeUrl: qrApiUrl,
+            perk: 'Priority booking & VIP crest'
+        });
+
+        // --- WebSocket Connection ---
+        const HUB = 'wss://wss.overlays.latinabeautycollection.com/ws';
+
+        function connect() {
+            const ws = new WebSocket(`${HUB}?widget=vip`);
+            ws.onopen = () => console.log('[ws] vip panel connected');
+            ws.onclose = () => setTimeout(connect, 2000);
+            ws.onmessage = (ev) => {
+                try {
+                    const msg = JSON.parse(ev.data);
+                    if (msg && msg.type === 'vip.show') {
+                        render(msg.data);
+                    }
+                } catch (e) {}
+            };
+        }
+        connect();
+    </script>
+</body>
+
+</html>

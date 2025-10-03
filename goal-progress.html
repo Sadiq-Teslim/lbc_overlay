@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>LBC • Goal Progress Overlay</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+
+    <style>
+         :root {
+            --gold-1: #fff2b3;
+            --gold-2: #f7d17c;
+            --gold-3: #e0a84f;
+            --gold-4: #b5792f;
+            --gold-5: #8b5a1f;
+            --gold-grad: linear-gradient(135deg, var(--gold-1) 0%, var(--gold-2) 20%, var(--gold-3) 45%, var(--gold-1) 65%, var(--gold-4) 100%);
+            --glow: 0 0 18px rgba(247, 209, 124, .45);
+            --panel-bg: rgba(10, 10, 10, .40);
+            /* Translucent smoke panel */
+            --text: #f8f5ee;
+            --accent: #d4af37;
+        }
+        
+        body {
+            font-family: "Poppins", system-ui, sans-serif;
+            background: transparent;
+            margin: 0;
+            padding: 20px;
+            display: grid;
+            place-items: center;
+            height: 100vh;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+        /* --- Framed panel with sheen animation --- */
+        
+        .frame {
+            position: relative;
+            width: 800px;
+            background: var(--panel-bg);
+            border-radius: 24px;
+            padding: 24px 28px;
+            border: 3px solid transparent;
+            -webkit-backdrop-filter: blur(6px);
+            backdrop-filter: blur(6px);
+            box-shadow: var(--glow);
+            border-image: var(--gold-grad) 1;
+            overflow: hidden;
+        }
+        
+        .frame::before {
+            content: "";
+            position: absolute;
+            inset: -2px;
+            background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, .25) 45%, transparent 60%);
+            transform: translateX(-100%);
+            animation: sweep 6s linear infinite;
+            pointer-events: none;
+        }
+        
+        @keyframes sweep {
+            to {
+                transform: translateX(100%);
+            }
+        }
+        /* --- Header --- */
+        
+        .header {
+            text-align: center;
+            font-size: 24px;
+            font-weight: 800;
+            letter-spacing: .08em;
+            color: var(--text);
+            text-transform: uppercase;
+            margin-bottom: 20px;
+        }
+        /* --- Main Progress Bar --- */
+        
+        .progress-bar-main {
+            position: relative;
+            width: 100%;
+            height: 40px;
+            background-color: rgba(0, 0, 0, .5);
+            border-radius: 20px;
+            border: 2px solid;
+            border-image: var(--gold-grad) 1;
+            padding: 4px;
+            box-sizing: border-box;
+        }
+        
+        .progress-bar-fill {
+            height: 100%;
+            border-radius: 16px;
+            background: var(--gold-grad);
+            box-shadow: var(--glow);
+            transition: width 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+            /* Smooth, elastic transition */
+        }
+        
+        .progress-bar-text {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            font-size: 16px;
+            font-weight: 600;
+            color: #2a1b07;
+            text-shadow: 0 1px 1px rgba(255, 255, 255, .2);
+        }
+        
+        .progress-bar-text .actual {
+            font-weight: 800;
+        }
+        
+        .progress-bar-text .empuje {
+            background: rgba(255, 255, 255, .2);
+            padding: 2px 8px;
+            border-radius: 8px;
+        }
+        /* --- Stats Grid --- */
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        .stat-box {
+            background: rgba(10, 10, 10, .55);
+            border: 2px solid transparent;
+            border-image: var(--gold-grad) 1;
+            border-radius: 16px;
+            padding: 16px;
+        }
+        
+        .stat-label {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--accent);
+            text-transform: uppercase;
+        }
+        
+        .stat-value {
+            font-size: 36px;
+            font-weight: 800;
+            color: var(--gold-1);
+            text-shadow: 0 0 10px rgba(247, 209, 124, .55);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="frame">
+        <div class="header">Jackpot • Goal Progress</div>
+
+        <div class="progress-bar-main">
+            <div id="progress-bar-fill" class="progress-bar-fill" style="width: 0%;"></div>
+            <div class="progress-bar-text">
+                <span id="progress-actual" class="actual">Actual: $0 (0%)</span>
+                <span id="progress-objetivo">Objetivo: $1,000</span>
+                <span class="empuje">¡Casi llegamos!</span>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-box">
+                <div class="stat-label">Tippers únicos</div>
+                <div id="stat-tippers" class="stat-value">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Promedio por tip</div>
+                <div id="stat-average" class="stat-value">$0.00</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Tiempo restante</div>
+                <div id="stat-timer" class="stat-value">--:--</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- DOM Element Selection ---
+        const elements = {
+            fill: document.getElementById('progress-bar-fill'),
+            actual: document.getElementById('progress-actual'),
+            objetivo: document.getElementById('progress-objetivo'),
+            tippers: document.getElementById('stat-tippers'),
+            average: document.getElementById('stat-average'),
+            timer: document.getElementById('stat-timer')
+        };
+
+        let countdownInterval;
+
+        // --- Renderer Function ---
+        function render(data) {
+            if (!data) return;
+
+            const {
+                goal = 1, current = 0, tippers = 0, timeRemaining = 0
+            } = data;
+
+            const percentage = Math.min((current / goal) * 100, 100);
+            const average = tippers > 0 ? (current / tippers) : 0;
+
+            const currency = (val) => new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD'
+            }).format(val);
+
+            elements.fill.style.width = `${percentage}%`;
+            elements.actual.textContent = `Actual: ${currency(current)} (${percentage.toFixed(0)}%)`;
+            elements.objetivo.textContent = `Objetivo: ${currency(goal)}`;
+            elements.tippers.textContent = tippers;
+            elements.average.textContent = currency(average);
+
+            // Handle the countdown timer
+            let duration = timeRemaining;
+            clearInterval(countdownInterval);
+            countdownInterval = setInterval(() => {
+                if (duration <= 0) {
+                    clearInterval(countdownInterval);
+                    elements.timer.textContent = "00:00";
+                    return;
+                }
+                const minutes = Math.floor(duration / 60).toString().padStart(2, '0');
+                const seconds = (duration % 60).toString().padStart(2, '0');
+                elements.timer.textContent = `${minutes}:${seconds}`;
+                duration--;
+            }, 1000);
+        }
+
+        // --- Initial Demo/Test Data ---
+        const demoData = {
+            goal: 1000,
+            current: 870,
+            tippers: 34,
+            timeRemaining: 310 // 5 minutes 10 seconds
+        };
+        render(demoData);
+
+        // --- WebSocket Connection ---
+        const HUB = 'wss://wss.overlays.latinabeautycollection.com/ws';
+
+        function connect() {
+            const ws = new WebSocket(`${HUB}?widget=goal`);
+            ws.onopen = () => console.log('[ws] goal progress connected');
+            ws.onclose = () => setTimeout(connect, 2000);
+            ws.onmessage = (ev) => {
+                try {
+                    const msg = JSON.parse(ev.data);
+                    if (msg && msg.type === 'goal.update') {
+                        render(msg.data);
+                    }
+                } catch (e) {}
+            };
+        }
+        connect();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>LBC • Combined Leaderboard</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+
+    <style>
+         :root {
+            --gold-1: #fff2b3;
+            --gold-2: #f7d17c;
+            --gold-3: #e0a84f;
+            --gold-4: #b5792f;
+            --gold-grad: linear-gradient(135deg, var(--gold-1) 0%, var(--gold-2) 20%, var(--gold-3) 45%, var(--gold-1) 65%, var(--gold-4) 100%);
+            --glow: 0 0 18px rgba(247, 209, 124, .45);
+            --panel-bg: rgba(10, 10, 10, .40);
+            --row-bg: rgba(10, 10, 10, .55);
+            --text: #f8f5ee;
+            --accent: #d4af37;
+        }
+        
+        body {
+            font-family: "Poppins", system-ui, sans-serif;
+            background: transparent;
+            margin: 0;
+            display: grid;
+            place-items: center;
+            height: 100vh;
+        }
+        
+        .frame {
+            position: relative;
+            width: 700px;
+            /* Wider for the combined layout */
+            background: var(--panel-bg);
+            border-radius: 24px;
+            padding: 24px 28px;
+            border: 3px solid transparent;
+            -webkit-backdrop-filter: blur(6px);
+            backdrop-filter: blur(6px);
+            box-shadow: var(--glow);
+            border-image: var(--gold-grad) 1;
+            overflow: hidden;
+        }
+        
+        .frame::before {
+            content: "";
+            position: absolute;
+            inset: -2px;
+            background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, .25) 45%, transparent 60%);
+            transform: translateX(-100%);
+            animation: sweep 6s linear infinite;
+            pointer-events: none;
+        }
+        
+        @keyframes sweep {
+            to {
+                transform: translateX(100%);
+            }
+        }
+        
+        .header {
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: .06em;
+            color: var(--text);
+            text-transform: uppercase;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .content-grid {
+            display: flex;
+            gap: 20px;
+        }
+        /* --- Leaderboard Side --- */
+        
+        .leaderboard-side {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .row {
+            display: grid;
+            grid-template-columns: 40px 1fr auto;
+            align-items: center;
+            background: var(--row-bg);
+            border: 2px solid transparent;
+            border-image: var(--gold-grad) 1;
+            border-radius: 16px;
+            padding: 8px 14px;
+            color: var(--text);
+        }
+        
+        .rank {
+            font-weight: 800;
+            font-size: 18px;
+            color: var(--accent);
+        }
+        
+        .name {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .crown {
+            width: 20px;
+            height: 20px;
+            display: inline-block;
+            filter: drop-shadow(0 0 6px rgba(247, 209, 124, .55));
+            background: radial-gradient(circle at 50% 85%, var(--gold-1), transparent 60%), conic-gradient(from 200deg, var(--gold-4), var(--gold-2), var(--gold-3), var(--gold-4));
+            -webkit-mask: radial-gradient(circle at 20% 40%, #000 16px, transparent 17px), radial-gradient(circle at 50% 25%, #000 16px, transparent 17px), radial-gradient(circle at 80% 40%, #000 16px, transparent 17px), linear-gradient(#000 0 0);
+            -webkit-mask-composite: destination-out, destination-out, destination-out, source-over;
+            mask-composite: exclude;
+            border-radius: 0 0 6px 6px;
+        }
+        
+        .score {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--gold-1);
+        }
+        /* --- Spin Wheel Side --- */
+        
+        .spin-wheel-side {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .wheel-container {
+            position: relative;
+            width: 220px;
+            height: 220px;
+            filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5));
+        }
+        
+        .wheel-pointer {
+            position: absolute;
+            top: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            width: 30px;
+            height: 45px;
+            filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.5));
+        }
+        
+        .wheel-svg {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .wheel-border {
+            fill: none;
+            stroke: url(#goldGradient);
+            stroke-width: 20;
+        }
+        
+        .wheel-segment {
+            stroke: var(--gold-4);
+            stroke-width: 2;
+        }
+        
+        .wheel-center-text {
+            font-size: 42px;
+            font-weight: 800;
+            fill: var(--text);
+            text-anchor: middle;
+        }
+        
+        .top-fan-button {
+            padding: 8px 20px;
+            background: var(--gold-grad);
+            color: #2a1b07;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 800;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- SVG Defs for gradients -->
+    <svg style="width:0;height:0;position:absolute;" aria-hidden="true" focusable="false">
+    <defs>
+        <linearGradient id="goldGradient" x2="0" y2="1">
+            <stop offset="0%" stop-color="#fef5d8" /><stop offset="100%" stop-color="#d4af37" />
+        </linearGradient>
+    </defs>
+</svg>
+
+    <div class="frame">
+        <div class="header">Leaderboard</div>
+        <div class="content-grid">
+            <div id="leaderboard-list" class="leaderboard-side"></div>
+            <div class="spin-wheel-side">
+                <div class="wheel-container">
+                    <svg class="wheel-pointer" viewBox="0 0 30 45">
+                    <path fill="url(#goldGradient)" stroke="#a17d2f" stroke-width="2" d="M15 0 L30 25 C30 25, 20 45, 15 45 C10 45, 0 25, 0 25 Z"></path>
+                </svg>
+                    <svg class="wheel-svg" viewBox="0 0 500 500">
+                    <g id="wheel-graphic"></g>
+                    <text class="wheel-center-text" x="250" y="235">SPIN<tspan x="250" dy="1.2em">TO</tspan><tspan x="250" dy="1.2em">WIN</tspan></text>
+                </svg>
+                </div>
+                <div class="top-fan-button">TOP FAN OF THE WEEK</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script>
+        const leaderboardEl = document.getElementById('leaderboard-list');
+        const wheelGraphic = document.getElementById('wheel-graphic');
+
+        // --- Leaderboard Logic ---
+        function renderLeaderboard(items = []) {
+            items = (items || []).slice(0, 5); // Show top 5
+            leaderboardEl.innerHTML = items.map((it, idx) =>
+                `<div class="row">
+                <div class="rank">${idx+1}</div>
+                <div class="name">${idx===0 ? '<span class="crown"></span>' : ''}<span>${it.name}</span></div>
+                <div class="score">${new Intl.NumberFormat().format(it.score)}</div>
+            </div>`
+            ).join('');
+        }
+
+        // --- Spin Wheel Logic ---
+        const segments = [{
+            color: '#8B0000'
+        }, {
+            color: '#4B0082'
+        }, {
+            color: '#00008B'
+        }, {
+            color: '#006400'
+        }, {
+            color: '#FF8C00'
+        }, {
+            color: '#4B0082'
+        }, {
+            color: '#8B008B'
+        }, {
+            color: '#006400'
+        }];
+        const numSegments = segments.length;
+        const anglePerSegment = 360 / numSegments;
+
+        function drawWheel() {
+            const getWedgePath = (startAngle, endAngle) => {
+                const r = 250;
+                const x1 = 250 + r * Math.cos(Math.PI * startAngle / 180);
+                const y1 = 250 + r * Math.sin(Math.PI * startAngle / 180);
+                const x2 = 250 + r * Math.cos(Math.PI * endAngle / 180);
+                const y2 = 250 + r * Math.sin(Math.PI * endAngle / 180);
+                return `M250,250 L${x1},${y1} A${r},${r} 0 0,1 ${x2},${y2} z`;
+            };
+            segments.forEach((segment, i) => {
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                path.setAttribute('class', 'wheel-segment');
+                path.setAttribute('d', getWedgePath(i * anglePerSegment, (i + 1) * anglePerSegment));
+                path.setAttribute('fill', segment.color);
+                wheelGraphic.appendChild(path);
+            });
+            const border = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            border.setAttribute('class', 'wheel-border');
+            border.setAttribute('cx', 250);
+            border.setAttribute('cy', 250);
+            border.setAttribute('r', 240);
+            wheelGraphic.appendChild(border);
+        }
+
+        function spinWheel(winnerIndex) {
+            const rotations = 5;
+            const stopAngle = winnerIndex * anglePerSegment;
+            const targetOffset = anglePerSegment / 2;
+            const targetRotation = (360 * rotations) + (360 - stopAngle) - targetOffset;
+            gsap.to(wheelGraphic, {
+                rotation: `+=${targetRotation}`,
+                duration: 6,
+                ease: "power3.inOut"
+            });
+        }
+
+        // --- Initialization & Demo Data ---
+        drawWheel();
+        renderLeaderboard([{
+            name: 'ANNA',
+            score: 3750
+        }, {
+            name: 'MICHAEL',
+            score: 2900
+        }, {
+            name: 'DAVID',
+            score: 2450
+        }, {
+            name: 'JAMES',
+            score: 1800
+        }, {
+            name: 'SARAH',
+            score: 1500
+        }]);
+
+        // --- WebSocket Connection ---
+        const HUB = 'wss://wss.overlays.latinabeautycollection.com/ws';
+
+        function connect() {
+            const ws = new WebSocket(`${HUB}?widget=combined`);
+            ws.onopen = () => console.log('[ws] combined widget connected');
+            ws.onclose = () => setTimeout(connect, 2000);
+            ws.onmessage = (ev) => {
+                try {
+                    const msg = JSON.parse(ev.data);
+                    if (msg.type === 'leaderboard.update') renderLeaderboard(msg.data);
+                    if (msg.type === 'spin.trigger') spinWheel(msg.winnerIndex);
+                } catch (e) {}
+            };
+        }
+        connect();
+    </script>
+</body>
+
+</html>

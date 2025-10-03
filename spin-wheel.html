@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spin Wheel</title>
+    <link rel="stylesheet" href="../assets/css/main.css">
+</head>
+<body style="background-color: transparent;">
+
+    <div class="widget-container spin-widget">
+    <div class="wheel-container">
+        <!-- This is the static pointer that stays still -->
+        <div class="wheel-pointer"></div>
+
+        <!-- This is the SVG wheel that will spin -->
+        <svg id="wheel" class="wheel-svg" viewBox="0 0 500 500">
+            <!-- The <g> tag groups all the wheel parts so we can spin the group -->
+            <g class="wheel-graphic">
+                <!-- We will generate the segments with JavaScript -->
+            </g>
+        </svg>
+    </div>
+    <div id="winner-display" class="winner-display">
+        Spinning...
+    </div>
+</div>
+
+    <!-- 1. GSAP Library (for animation) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    
+    <!-- 2. Socket.IO and our client -->
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <script src="../assets/js/socket-client.js"></script>
+
+    <!-- 3. Our widget's specific logic -->
+    <script src="../assets/js/spin-wheel.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>LBC • Countdown Overlay</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+
+    <style>
+         :root {
+            --gold-1: #fff2b3;
+            --gold-2: #f7d17c;
+            --gold-3: #e0a84f;
+            --gold-4: #b5792f;
+            --gold-grad: linear-gradient(135deg, var(--gold-1) 0%, var(--gold-2) 20%, var(--gold-3) 45%, var(--gold-1) 65%, var(--gold-4) 100%);
+            --text: #f8f5ee;
+            --accent: #d4af37;
+        }
+        
+        body {
+            font-family: "Poppins", system-ui, sans-serif;
+            background: transparent;
+            margin: 0;
+            display: grid;
+            place-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        /* --- Countdown Widget Container --- */
+        
+        .countdown-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            width: 450px;
+        }
+        /* --- Header --- */
+        
+        .header {
+            display: inline-block;
+            padding: 4px 20px;
+            border: 2px solid;
+            border-image: var(--gold-grad) 1;
+            border-radius: 20px;
+            font-size: 18px;
+            font-weight: 600;
+            letter-spacing: .08em;
+            color: var(--text);
+            text-transform: uppercase;
+        }
+        /* --- Circular Timer --- */
+        
+        .timer-circle {
+            position: relative;
+            width: 250px;
+            height: 250px;
+            display: grid;
+            place-items: center;
+        }
+        
+        .timer-svg {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg);
+        }
+        
+        .timer-background {
+            fill: none;
+            stroke: rgba(255, 255, 255, .1);
+            stroke-width: 12;
+        }
+        
+        .timer-progress {
+            fill: none;
+            stroke: url(#goldGradient);
+            stroke-width: 12;
+            stroke-linecap: round;
+            stroke-dasharray: 722;
+            /* 2 * PI * 115 */
+            stroke-dashoffset: 722;
+            transition: stroke-dashoffset 1s linear;
+        }
+        
+        .time-display {
+            font-size: 4rem;
+            font-weight: 800;
+            color: var(--text);
+            z-index: 5;
+        }
+        /* --- Subtitle and Action Buttons --- */
+        
+        .subtitle {
+            font-size: 16px;
+            color: #ccc;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .button {
+            padding: 8px 16px;
+            background: rgba(10, 10, 10, .55);
+            border: 2px solid transparent;
+            border-image: var(--gold-grad) 1;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text);
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Define SVG gradients for use in the CSS -->
+    <svg style="width:0;height:0;position:absolute;" aria-hidden="true" focusable="false">
+    <defs>
+        <linearGradient id="goldGradient" x2="0" y2="1">
+            <stop offset="0%" stop-color="#fef5d8" />
+            <stop offset="100%" stop-color="#d4af37" />
+        </linearGradient>
+    </defs>
+</svg>
+
+    <div class="countdown-container">
+        <div id="header" class="header">Countdown • Next Start</div>
+        <div class="timer-circle">
+            <svg class="timer-svg" viewBox="0 0 250 250">
+            <circle class="timer-background" cx="125" cy="125" r="115" />
+            <circle id="timer-progress" class="timer-progress" cx="125" cy="125" r="115" />
+        </svg>
+            <div id="time-display" class="time-display">--:--</div>
+        </div>
+        <div id="subtitle" class="subtitle">Show starts at 3:00 PM EST</div>
+        <div class="button-group">
+            <div class="button">Join Telegram</div>
+            <div class="button">VIP Access</div>
+        </div>
+    </div>
+
+    <script>
+        // --- DOM Element Selection ---
+        const elements = {
+            header: document.getElementById('header'),
+            progress: document.getElementById('timer-progress'),
+            time: document.getElementById('time-display'),
+            subtitle: document.getElementById('subtitle')
+        };
+
+        const CIRCUMFERENCE = 2 * Math.PI * 115;
+        let countdownInterval;
+
+        // --- Renderer Function ---
+        function render(data) {
+            if (!data || !data.targetTimestamp) return;
+
+            const {
+                targetTimestamp,
+                title = "Countdown",
+                subtitle = ""
+            } = data;
+
+            elements.header.textContent = title;
+            elements.subtitle.textContent = subtitle;
+
+            const totalDuration = (targetTimestamp - Date.now()) / 1000;
+
+            clearInterval(countdownInterval);
+            countdownInterval = setInterval(() => {
+                const remainingTime = Math.max(0, targetTimestamp - Date.now());
+
+                if (remainingTime === 0) {
+                    clearInterval(countdownInterval);
+                    elements.time.textContent = "00:00";
+                    elements.progress.style.strokeDashoffset = CIRCUMFERENCE;
+                    return;
+                }
+
+                // Update text
+                const minutes = Math.floor((remainingTime / 1000 / 60) % 60).toString().padStart(2, '0');
+                const seconds = Math.floor((remainingTime / 1000) % 60).toString().padStart(2, '0');
+                elements.time.textContent = `${minutes}:${seconds}`;
+
+                // Update circle
+                const elapsed = totalDuration - (remainingTime / 1000);
+                const progress = elapsed / totalDuration;
+                const dashoffset = CIRCUMFERENCE * (1 - progress);
+                elements.progress.style.strokeDashoffset = dashoffset;
+            }, 1000);
+        }
+
+        // --- Initial Demo/Test Data ---
+        const fiveMinutesFromNow = Date.now() + (12 * 60 + 34) * 1000; // 12 mins 34 secs
+        render({
+            targetTimestamp: fiveMinutesFromNow,
+            title: "Countdown • Next Start",
+            subtitle: "Show starts at 3:00 PM EST"
+        });
+
+        // --- WebSocket Connection ---
+        const HUB = 'wss://wss.overlays.latinabeautycollection.com/ws';
+
+        function connect() {
+            const ws = new WebSocket(`${HUB}?widget=countdown`);
+            ws.onopen = () => console.log('[ws] countdown connected');
+            ws.onclose = () => setTimeout(connect, 2000);
+            ws.onmessage = (ev) => {
+                try {
+                    const msg = JSON.parse(ev.data);
+                    if (msg && msg.type === 'countdown.set') {
+                        render(msg.data);
+                    }
+                } catch (e) {}
+            };
+        }
+        connect();
+    </script>
+</body>
+
+</html>
