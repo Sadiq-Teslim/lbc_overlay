@@ -378,6 +378,14 @@
             };
         }
         connect();
+
+        /* --- Test Harness Listener --- */
+        window.addEventListener('message', (event) => {
+            if (event.data && event.data.type === 'raffle.update') {
+                console.log('[Test Harness] Received:', event.data.data);
+                render(event.data.data);
+            }
+        });
     </script>
 </body>
 
